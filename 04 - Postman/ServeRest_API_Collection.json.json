@@ -1,0 +1,3206 @@
+{
+  "info": {
+    "_postman_id": "42c1e68e-cb1a-4689-b7e9-16bce50197ba",
+    "name": "ServeRest API – Testes v2",
+    "description": "# ServeRest API – Testes com Postman\n\nColeção de testes da API ServeRest (https://serverest.dev), com 32 casos de teste + 20 requisições de preparação.\n\n## Como usar\n1. Importe esta coleção. Não precisa de environment: a URL base (baseUrl) e a senha padrão já estão nas variáveis da coleção.\n2. Rode a pasta **00 - Preparação** (Run folder). Ela cria os usuários e produtos da massa de dados e guarda os tokens e IDs em variáveis.\n3. Rode as pastas 01 a 04, uma a uma ou todas juntas com o Collection Runner (na ordem).\n\n## Observações\n- Para trocar a URL, edite a variável baseUrl na aba Variables da coleção (sem barra no final).\n- Os tokens duram 10 minutos. A coleção renova os tokens sozinha quando passam de 8 minutos.\n- Alguns casos só rodam uma vez por preparação (por exemplo, o carrinho do Usuário Comum 1). Para repetir, rode a pasta 00 de novo.\n- Os casos CT-LOG-05, 06 e 07 são exploratórios: o Swagger não documenta o esperado.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58741066",
+    "_collection_link": "https://go.postman.co/collection/58741066-42c1e68e-cb1a-4689-b7e9-16bce50197ba?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "00 - Preparação",
+      "item": [
+        {
+          "name": "P01 – Cadastrar Usuário Admin (gera o código da execução)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Gera um código novo a cada preparação, para e-mails e nomes nunca se repetirem no servidor público.",
+                  "const runId = String(Date.now()).slice(-8);",
+                  "pm.collectionVariables.set('runId', runId);",
+                  "pm.collectionVariables.set('emailAdmin', `admin.qa.${runId}@qa.com.br`);",
+                  "for (let i = 1; i <= 7; i++) {",
+                  "  pm.collectionVariables.set(`emailComum${i}`, `comum${i}.qa.${runId}@qa.com.br`);",
+                  "}",
+                  "pm.collectionVariables.set('nomeProdA', `Teclado QA ${runId}`);",
+                  "pm.collectionVariables.set('nomeProdB', `Mouse QA ${runId}`);",
+                  "pm.collectionVariables.set('nomeProdC', `Monitor QA ${runId}`);",
+                  "pm.collectionVariables.set('tokenTime', '');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idAdmin', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Admin\",\n  \"email\": \"{{emailAdmin}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"true\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P02 – Cadastrar Usuário Comum 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idComum1', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 1\",\n  \"email\": \"{{emailComum1}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P03 – Cadastrar Usuário Comum 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idComum2', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 2\",\n  \"email\": \"{{emailComum2}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P04 – Cadastrar Usuário Comum 3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idComum3', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 3\",\n  \"email\": \"{{emailComum3}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P05 – Cadastrar Usuário Comum 4",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idComum4', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 4\",\n  \"email\": \"{{emailComum4}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P06 – Cadastrar Usuário Comum 5",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idComum5', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 5\",\n  \"email\": \"{{emailComum5}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P07 – Cadastrar Usuário Comum 6",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idComum6', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 6\",\n  \"email\": \"{{emailComum6}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P08 – Cadastrar Usuário Comum 7",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idComum7', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 7\",\n  \"email\": \"{{emailComum7}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Preparação do ambiente (seção 4 do documento de casos de teste)."
+          },
+          "response": []
+        },
+        {
+          "name": "P09 – Login do Usuário Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenAdmin', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P10 – Login do Usuário Comum 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenComum1', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum1}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P11 – Login do Usuário Comum 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenComum2', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum2}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P12 – Login do Usuário Comum 3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenComum3', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum3}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P13 – Login do Usuário Comum 4",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenComum4', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum4}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P14 – Login do Usuário Comum 5",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenComum5', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum5}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P15 – Login do Usuário Comum 6",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenComum6', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum6}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P16 – Login do Usuário Comum 7",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Token começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer /));",
+                  "pm.collectionVariables.set('tokenComum7', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum7}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Preparação do ambiente. O token vale 10 minutos."
+          },
+          "response": []
+        },
+        {
+          "name": "P17 – Cadastrar Produto A (estoque 100)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idProdA', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeProdA}}\",\n  \"preco\": 250,\n  \"descricao\": \"Teclado mecânico\",\n  \"quantidade\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "Preparação do ambiente (token do Admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "P18 – Cadastrar Produto B (estoque 50)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idProdB', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeProdB}}\",\n  \"preco\": 120,\n  \"descricao\": \"Mouse sem fio\",\n  \"quantidade\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "Preparação do ambiente (token do Admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "P19 – Cadastrar Produto C (estoque 10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('Resposta traz o _id', () => pm.expect(j._id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('idProdC', j._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeProdC}}\",\n  \"preco\": 900,\n  \"descricao\": \"Monitor 24 polegadas\",\n  \"quantidade\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "Preparação do ambiente (token do Admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "P20 – Criar carrinho do Usuário Comum 7 com o Produto C",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "pm.collectionVariables.set('idCarrinhoComum7', pm.response.json()._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum7}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProdC}}\", \"quantidade\": 1 } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos"
+              ]
+            },
+            "description": "Preparação do ambiente: deixa o Comum 7 com carrinho e o Produto C dentro dele (usado em CT-USR-08 e CT-PRD-08)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Cria a massa de dados (seção 4 do documento de casos de teste). Rodar antes das demais pastas."
+    },
+    {
+      "name": "01 - Login",
+      "item": [
+        {
+          "name": "CT-LOG-01 – Fazer login com um administrador válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('authorization existe e começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer .+/));",
+                  "pm.collectionVariables.set('tokenAdmin', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "RN-01 · Esperado: 200, “Login realizado com sucesso” e token Bearer."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-LOG-02 – Fazer login com um usuário comum válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Login realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Login realizado com sucesso\"));",
+                  "const j = pm.response.json();",
+                  "pm.test('authorization existe e começa com Bearer', () => pm.expect(j.authorization).to.match(/^Bearer .+/));",
+                  "pm.collectionVariables.set('tokenComum1', j.authorization);",
+                  "pm.collectionVariables.set('tokenTime', String(Date.now()));",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComum1}}\",\n  \"password\": \"{{senha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "RN-01 · Esperado: 200, “Login realizado com sucesso” e token Bearer."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-LOG-03 – Tentar fazer login com a senha incorreta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensagem: Email e/ou senha inválidos', () => pm.expect(pm.response.json().message).to.eql(\"Email e/ou senha inválidos\"));",
+                  "pm.test('Nenhum token é entregue', () => pm.expect(pm.response.json()).to.not.have.property('authorization'));",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"password\": \"senhaErrada999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "RN-02 · Esperado: 401, “Email e/ou senha inválidos” e nenhum token."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-LOG-04 – Tentar fazer login com um e-mail não cadastrado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensagem: Email e/ou senha inválidos', () => pm.expect(pm.response.json().message).to.eql(\"Email e/ou senha inválidos\"));",
+                  "pm.test('Nenhum token é entregue', () => pm.expect(pm.response.json()).to.not.have.property('authorization'));",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"naoexiste.qa@qa.com.br\",\n  \"password\": \"teste123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "RN-02 · Esperado: 401, “Email e/ou senha inválidos” e nenhum token."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-LOG-05 – Tentar fazer login sem informar o e-mail (exploratório)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Caso exploratório: o Swagger não documenta. Esperado definido pelo QA (RN-03).",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('A resposta traz uma mensagem de erro', () => pm.expect(JSON.stringify(pm.response.json())).to.not.be.empty);",
+                  "pm.test('Nenhum token é entregue', () => pm.expect(pm.response.json()).to.not.have.property('authorization'));",
+                  "console.log('CT-LOG-05 resposta da API:', pm.response.text());",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"teste123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "RN-03 (definida pelo QA) · Esperado: 400 e nenhum token. Anotar em Observações o texto exato devolvido."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-LOG-06 – Tentar fazer login sem informar a senha (exploratório)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Caso exploratório: o Swagger não documenta. Esperado definido pelo QA (RN-03).",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('A resposta traz uma mensagem de erro', () => pm.expect(JSON.stringify(pm.response.json())).to.not.be.empty);",
+                  "pm.test('Nenhum token é entregue', () => pm.expect(pm.response.json()).to.not.have.property('authorization'));",
+                  "console.log('CT-LOG-06 resposta da API:', pm.response.text());",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailAdmin}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "RN-03 (definida pelo QA) · Esperado: 400 e nenhum token. Anotar em Observações o texto exato devolvido."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-LOG-07 – Tentar fazer login com e-mail em formato inválido (exploratório)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Caso exploratório: o Swagger não documenta. Esperado definido pelo QA (RN-03).",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('A resposta traz uma mensagem de erro', () => pm.expect(JSON.stringify(pm.response.json())).to.not.be.empty);",
+                  "pm.test('Nenhum token é entregue', () => pm.expect(pm.response.json()).to.not.have.property('authorization'));",
+                  "console.log('CT-LOG-07 resposta da API:', pm.response.text());",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"email-sem-arroba\",\n  \"password\": \"teste123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "RN-03 (definida pelo QA) · Esperado: 400 e nenhum token. Se vier 401, anotar em Observações."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-LOG-08 – Usar um token inválido em uma rota protegida",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensagem: Token de acesso ausente, inválido, expirado ou usuário do token não existe mais', () => pm.expect(pm.response.json().message).to.eql(\"Token de acesso ausente, inválido, expirado ou usuário do token não existe mais\"));",
+                  "call('GET', '/produtos?nome=' + encodeURIComponent('Produto Token Inválido QA'), null, null, (err, res) => {",
+                  "  pm.test('O produto não foi criado (quantidade 0)', () => {",
+                  "    pm.expect(err).to.eql(null);",
+                  "    pm.expect(res.json().quantidade).to.eql(0);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{bearer_token_14lb}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto Token Inválido QA\",\n  \"preco\": 100,\n  \"descricao\": \"Teste\",\n  \"quantidade\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "RN-04 · Esperado: 401 com a mensagem de token inválido e produto não criado."
+          },
+          "response": []
+        }
+      ],
+      "description": "8 casos: CT-LOG-01 a CT-LOG-08."
+    },
+    {
+      "name": "02 - Usuários",
+      "item": [
+        {
+          "name": "CT-USR-01 – Listar os usuários cadastrados",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Tem quantidade (número) e usuarios (lista)', () => {",
+                  "  pm.expect(j.quantidade).to.be.a('number');",
+                  "  pm.expect(j.usuarios).to.be.an('array');",
+                  "});",
+                  "pm.test('Cada usuário tem nome, email, password, administrador e _id', () => {",
+                  "  pm.expect(j.usuarios.length).to.be.above(0);",
+                  "  pm.expect(j.usuarios[0]).to.include.all.keys('nome', 'email', 'password', 'administrador', '_id');",
+                  "});",
+                  "pm.test('quantidade é igual ao número de itens da lista', () => pm.expect(j.quantidade).to.eql(j.usuarios.length));",
+                  "call('GET', '/usuarios?email=' + encodeURIComponent(pm.collectionVariables.get('emailComum1')), null, null, (err, res) => {",
+                  "  pm.test('Filtro por e-mail devolve só o Usuário Comum 1', () => {",
+                  "    pm.expect(err).to.eql(null);",
+                  "    pm.expect(res.code).to.eql(200);",
+                  "    pm.expect(res.json().quantidade).to.eql(1);",
+                  "    pm.expect(res.json().usuarios[0]._id).to.eql(pm.collectionVariables.get('idComum1'));",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "RN-06 · Esperado: 200, quantidade e lista de usuários."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-USR-02 – Cadastrar um usuário com dados válidos",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('emailNovo', `novo.qa.${Date.now()}@qa.com.br`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const id = pm.response.json()._id;",
+                  "pm.test('Resposta traz o _id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+                  "call('GET', '/usuarios/' + id, null, null, (err, res) => {",
+                  "  pm.test('GET do usuário criado devolve os dados enviados', () => {",
+                  "    pm.expect(err).to.eql(null);",
+                  "    pm.expect(res.code).to.eql(200);",
+                  "    const u = res.json();",
+                  "    pm.expect(u.nome).to.eql('QA Novo Usuário');",
+                  "    pm.expect(u.email).to.eql(pm.collectionVariables.get('emailNovo'));",
+                  "    pm.expect(u.password).to.eql('teste123');",
+                  "    pm.expect(u.administrador).to.eql('false');",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Novo Usuário\",\n  \"email\": \"{{emailNovo}}\",\n  \"password\": \"teste123\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "RN-05 · Esperado: 201, “Cadastro realizado com sucesso” e _id; dados conferem no GET."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-USR-03 – Tentar cadastrar um usuário com e-mail já utilizado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Este email já está sendo usado', () => pm.expect(pm.response.json().message).to.eql(\"Este email já está sendo usado\"));",
+                  "call('GET', '/usuarios?email=' + encodeURIComponent(pm.collectionVariables.get('emailComum1')), null, null, (err, res) => {",
+                  "  pm.test('Nenhum usuário duplicado (quantidade 1)', () => {",
+                  "    pm.expect(err).to.eql(null);",
+                  "    pm.expect(res.json().quantidade).to.eql(1);",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Repetido\",\n  \"email\": \"{{emailComum1}}\",\n  \"password\": \"teste123\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "RN-05 · Esperado: 400 e “Este email já está sendo usado”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-USR-04 – Buscar um usuário por um ID existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const u = pm.response.json();",
+                  "pm.test('Traz nome, email, password, administrador e _id', () => pm.expect(u).to.include.all.keys('nome', 'email', 'password', 'administrador', '_id'));",
+                  "pm.test('_id é o mesmo da busca', () => pm.expect(u._id).to.eql(pm.collectionVariables.get('idComum1')));",
+                  "pm.test('administrador é \"false\"', () => pm.expect(u.administrador).to.eql('false'));",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idComum1}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idComum1}}"
+              ]
+            },
+            "description": "RN-06 · Esperado: 200 com os dados do Usuário Comum 1."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-USR-05 – Buscar um usuário por um ID que não existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Usuário não encontrado', () => pm.expect(pm.response.json().message).to.eql(\"Usuário não encontrado\"));",
+                  "pm.test('Não traz dados de usuário', () => pm.expect(pm.response.json()).to.not.have.any.keys('nome', 'email', 'password'));",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/naoExiste1234567",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "naoExiste1234567"
+              ]
+            },
+            "description": "RN-06 · Esperado: 400 e “Usuário não encontrado”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-USR-06 – Editar os dados de um usuário existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Registro alterado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Registro alterado com sucesso\"));",
+                  "call('GET', '/usuarios/' + pm.collectionVariables.get('idComum1'), null, null, (err, res) => {",
+                  "  pm.test('Nome mudou e os outros dados continuam iguais', () => {",
+                  "    pm.expect(err).to.eql(null);",
+                  "    const u = res.json();",
+                  "    pm.expect(u.nome).to.eql('QA Comum 1 Editado');",
+                  "    pm.expect(u.email).to.eql(pm.collectionVariables.get('emailComum1'));",
+                  "    pm.expect(u.administrador).to.eql('false');",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Comum 1 Editado\",\n  \"email\": \"{{emailComum1}}\",\n  \"password\": \"{{senha}}\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idComum1}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idComum1}}"
+              ]
+            },
+            "description": "RN-07 · Esperado: 200, “Registro alterado com sucesso” e novo nome no GET."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-USR-07 – Excluir um usuário que não tem carrinho",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.collectionVariables.set('statusCadastroDescartavel', '');",
+                  "call('POST', '/usuarios', null, { nome: 'QA Descartável', email: `descartavel.qa.${Date.now()}@qa.com.br`, password: 'teste123', administrador: 'false' }, (err, res) => {",
+                  "  pm.collectionVariables.set('statusCadastroDescartavel', String(res.code));",
+                  "  pm.collectionVariables.set('idUsuarioDescartavel', res.json()._id);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Passo 1: usuário descartável cadastrado (201)', () => pm.expect(pm.collectionVariables.get('statusCadastroDescartavel')).to.eql('201'));",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Registro excluído com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Registro excluído com sucesso\"));",
+                  "call('GET', '/usuarios/' + pm.collectionVariables.get('idUsuarioDescartavel'), null, null, (err, res) => {",
+                  "  pm.test('Depois de excluído, o usuário não existe mais (400)', () => {",
+                  "    pm.expect(res.code).to.eql(400);",
+                  "    pm.expect(res.json().message).to.eql('Usuário não encontrado');",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuarioDescartavel}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuarioDescartavel}}"
+              ]
+            },
+            "description": "RN-08 · O pré-request cadastra o usuário descartável. Esperado: 200 e “Registro excluído com sucesso”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-USR-08 – Tentar excluir um usuário que tem carrinho",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Não é permitido excluir usuário com carrinho cadastrado', () => pm.expect(pm.response.json().message).to.eql(\"Não é permitido excluir usuário com carrinho cadastrado\"));",
+                  "pm.test('Resposta traz idCarrinho', () => pm.expect(pm.response.json().idCarrinho).to.be.a('string').and.not.empty);",
+                  "call('GET', '/usuarios/' + pm.collectionVariables.get('idComum7'), null, null, (err, res) => {",
+                  "  pm.test('O usuário continua cadastrado (200)', () => pm.expect(res.code).to.eql(200));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idComum7}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idComum7}}"
+              ]
+            },
+            "description": "RN-08 · Esperado: 400 e a mensagem de usuário com carrinho."
+          },
+          "response": []
+        }
+      ],
+      "description": "8 casos: CT-USR-01 a CT-USR-08."
+    },
+    {
+      "name": "03 - Produtos",
+      "item": [
+        {
+          "name": "CT-PRD-01 – Listar os produtos cadastrados (sem token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Tem quantidade (número) e produtos (lista)', () => {",
+                  "  pm.expect(j.quantidade).to.be.a('number');",
+                  "  pm.expect(j.produtos).to.be.an('array');",
+                  "});",
+                  "pm.test('Cada produto tem nome, preco, descricao, quantidade e _id', () => {",
+                  "  pm.expect(j.produtos.length).to.be.above(0);",
+                  "  pm.expect(j.produtos[0]).to.include.all.keys('nome', 'preco', 'descricao', 'quantidade', '_id');",
+                  "});",
+                  "call('GET', '/produtos?nome=' + encodeURIComponent(pm.collectionVariables.get('nomeProdA')), null, null, (err, res) => {",
+                  "  pm.test('Filtro por nome devolve só o Produto A', () => {",
+                  "    pm.expect(err).to.eql(null);",
+                  "    pm.expect(res.json().quantidade).to.eql(1);",
+                  "    pm.expect(res.json().produtos[0]._id).to.eql(pm.collectionVariables.get('idProdA'));",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "RN-09 · Listar produtos é público. Esperado: 200, quantidade e lista."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-PRD-02 – Cadastrar um produto como administrador",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('nomeProdNovo', `Headset QA ${Date.now()}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const id = pm.response.json()._id;",
+                  "pm.test('Resposta traz o _id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+                  "call('GET', '/produtos/' + id, null, null, (err, res) => {",
+                  "  pm.test('GET do produto criado devolve os dados enviados', () => {",
+                  "    pm.expect(res.code).to.eql(200);",
+                  "    const p = res.json();",
+                  "    pm.expect(p.nome).to.eql(pm.collectionVariables.get('nomeProdNovo'));",
+                  "    pm.expect(p.preco).to.eql(300);",
+                  "    pm.expect(p.descricao).to.eql('Headset com microfone');",
+                  "    pm.expect(p.quantidade).to.eql(20);",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeProdNovo}}\",\n  \"preco\": 300,\n  \"descricao\": \"Headset com microfone\",\n  \"quantidade\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "RN-09 · Esperado: 201, “Cadastro realizado com sucesso” e _id; dados conferem no GET."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-PRD-03 – Tentar cadastrar um produto com nome já existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Já existe produto com esse nome', () => pm.expect(pm.response.json().message).to.eql(\"Já existe produto com esse nome\"));",
+                  "call('GET', '/produtos?nome=' + encodeURIComponent(pm.collectionVariables.get('nomeProdA')), null, null, (err, res) => {",
+                  "  pm.test('Só existe 1 produto com o nome e o preço continua 250', () => {",
+                  "    pm.expect(res.json().quantidade).to.eql(1);",
+                  "    pm.expect(res.json().produtos[0].preco).to.eql(250);",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeProdA}}\",\n  \"preco\": 999,\n  \"descricao\": \"Nome repetido\",\n  \"quantidade\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "RN-10 · Esperado: 400 e “Já existe produto com esse nome”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-PRD-04 – Tentar cadastrar um produto sem token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensagem: Token de acesso ausente, inválido, expirado ou usuário do token não existe mais', () => pm.expect(pm.response.json().message).to.eql(\"Token de acesso ausente, inválido, expirado ou usuário do token não existe mais\"));",
+                  "call('GET', '/produtos?nome=' + encodeURIComponent('Produto Sem Token QA'), null, null, (err, res) => {",
+                  "  pm.test('O produto não foi criado (quantidade 0)', () => pm.expect(res.json().quantidade).to.eql(0));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto Sem Token QA\",\n  \"preco\": 100,\n  \"descricao\": \"Teste\",\n  \"quantidade\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "RN-04, RN-09 · Esperado: 401 com a mensagem de token ausente."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-PRD-05 – Tentar cadastrar um produto com usuário que não é administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Mensagem: Rota exclusiva para administradores', () => pm.expect(pm.response.json().message).to.eql(\"Rota exclusiva para administradores\"));",
+                  "call('GET', '/produtos?nome=' + encodeURIComponent('Produto Não Admin QA'), null, null, (err, res) => {",
+                  "  pm.test('O produto não foi criado (quantidade 0)', () => pm.expect(res.json().quantidade).to.eql(0));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum1}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto Não Admin QA\",\n  \"preco\": 100,\n  \"descricao\": \"Teste\",\n  \"quantidade\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "RN-09 · Esperado: 403 e “Rota exclusiva para administradores”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-PRD-06 – Editar um produto como administrador",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "const nome = `Cabo QA ${Date.now()}`;",
+                  "pm.collectionVariables.set('nomeProdEdicao', nome);",
+                  "pm.collectionVariables.set('statusCadastroProdEdicao', '');",
+                  "call('POST', '/produtos', pm.collectionVariables.get('tokenAdmin'), { nome: nome, preco: 15, descricao: 'Cabo USB', quantidade: 40 }, (err, res) => {",
+                  "  pm.collectionVariables.set('statusCadastroProdEdicao', String(res.code));",
+                  "  pm.collectionVariables.set('idProdEdicao', res.json()._id);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Passo 1: produto de teste cadastrado (201)', () => pm.expect(pm.collectionVariables.get('statusCadastroProdEdicao')).to.eql('201'));",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Registro alterado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Registro alterado com sucesso\"));",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdEdicao'), null, null, (err, res) => {",
+                  "  pm.test('Preço e descrição mudaram; nome e quantidade continuam iguais', () => {",
+                  "    const p = res.json();",
+                  "    pm.expect(p.preco).to.eql(20);",
+                  "    pm.expect(p.descricao).to.eql('Cabo USB-C');",
+                  "    pm.expect(p.nome).to.eql(pm.collectionVariables.get('nomeProdEdicao'));",
+                  "    pm.expect(p.quantidade).to.eql(40);",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeProdEdicao}}\",\n  \"preco\": 20,\n  \"descricao\": \"Cabo USB-C\",\n  \"quantidade\": 40\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{idProdEdicao}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{idProdEdicao}}"
+              ]
+            },
+            "description": "RN-09 · O pré-request cadastra o produto de teste. Esperado: 200 e “Registro alterado com sucesso”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-PRD-07 – Excluir um produto que não está em nenhum carrinho",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.collectionVariables.set('statusCadastroProdDescartavel', '');",
+                  "call('POST', '/produtos', pm.collectionVariables.get('tokenAdmin'), { nome: `Descartável QA ${Date.now()}`, preco: 10, descricao: 'Teste de exclusão', quantidade: 5 }, (err, res) => {",
+                  "  pm.collectionVariables.set('statusCadastroProdDescartavel', String(res.code));",
+                  "  pm.collectionVariables.set('idProdDescartavel', res.json()._id);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Passo 1: produto descartável cadastrado (201)', () => pm.expect(pm.collectionVariables.get('statusCadastroProdDescartavel')).to.eql('201'));",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Registro excluído com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Registro excluído com sucesso\"));",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdDescartavel'), null, null, (err, res) => {",
+                  "  pm.test('Depois de excluído, o produto não existe mais (400)', () => {",
+                  "    pm.expect(res.code).to.eql(400);",
+                  "    pm.expect(res.json().message).to.eql('Produto não encontrado');",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{idProdDescartavel}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{idProdDescartavel}}"
+              ]
+            },
+            "description": "RN-11 · O pré-request cadastra o produto descartável. Esperado: 200 e “Registro excluído com sucesso”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-PRD-08 – Tentar excluir um produto que está dentro de um carrinho",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Não é permitido excluir produto que faz parte de carrinho', () => pm.expect(pm.response.json().message).to.eql(\"Não é permitido excluir produto que faz parte de carrinho\"));",
+                  "pm.test('Resposta traz a lista idCarrinho', () => pm.expect(pm.response.json().idCarrinho).to.be.an('array').and.not.empty);",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdC'), null, null, (err, res) => {",
+                  "  pm.test('O produto continua cadastrado (200)', () => pm.expect(res.code).to.eql(200));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenAdmin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{idProdC}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{idProdC}}"
+              ]
+            },
+            "description": "RN-11 · Esperado: 400 e a mensagem de produto em carrinho."
+          },
+          "response": []
+        }
+      ],
+      "description": "8 casos: CT-PRD-01 a CT-PRD-08."
+    },
+    {
+      "name": "04 - Carrinhos",
+      "item": [
+        {
+          "name": "CT-CAR-01 – Cadastrar um carrinho com dados válidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Mensagem: Cadastro realizado com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));",
+                  "const id = pm.response.json()._id;",
+                  "pm.test('Resposta traz o _id do carrinho', () => pm.expect(id).to.be.a('string').and.not.empty);",
+                  "call('GET', '/carrinhos/' + id, null, null, (err, res) => {",
+                  "  pm.test('Dados do carrinho conferem', () => {",
+                  "    pm.expect(res.code).to.eql(200);",
+                  "    const c = res.json();",
+                  "    pm.expect(c.produtos[0].idProduto).to.eql(pm.collectionVariables.get('idProdA'));",
+                  "    pm.expect(c.produtos[0].quantidade).to.eql(2);",
+                  "    pm.expect(c.produtos[0].precoUnitario).to.eql(250);",
+                  "    pm.expect(c.precoTotal).to.eql(500);",
+                  "    pm.expect(c.quantidadeTotal).to.eql(2);",
+                  "    pm.expect(c.idUsuario).to.eql(pm.collectionVariables.get('idComum1'));",
+                  "  });",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum1}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProdA}}\", \"quantidade\": 2 } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos"
+              ]
+            },
+            "description": "RN-12 · Esperado: 201 e carrinho com preço total 500 e quantidade total 2. Só roda uma vez por Usuário Comum 1: para repetir, refaça a pasta 00."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-CAR-02 – Reduzir o estoque do produto ao cadastrar o carrinho",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdB'), null, null, (err, res) => {",
+                  "  pm.collectionVariables.set('estoqueAntesCar02', String(res.json().quantidade));",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const antes = Number(pm.collectionVariables.get('estoqueAntesCar02'));",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdB'), null, null, (err, res) => {",
+                  "  pm.test('Estoque depois = estoque antes menos 3', () => pm.expect(res.json().quantidade).to.eql(antes - 3));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum2}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProdB}}\", \"quantidade\": 3 } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos"
+              ]
+            },
+            "description": "RN-13 · Esperado: 201 e estoque do Produto B reduzido em 3."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-CAR-03 – Tentar cadastrar um carrinho sem token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensagem: Token de acesso ausente, inválido, expirado ou usuário do token não existe mais', () => pm.expect(pm.response.json().message).to.eql(\"Token de acesso ausente, inválido, expirado ou usuário do token não existe mais\"));",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProdA}}\", \"quantidade\": 1 } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos"
+              ]
+            },
+            "description": "RN-04 · Esperado: 401 com a mensagem de token ausente."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-CAR-04 – Tentar cadastrar um segundo carrinho para o mesmo usuário",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.collectionVariables.set('statusPrimeiroCarrinhoCar04', '');",
+                  "call('POST', '/carrinhos', pm.collectionVariables.get('tokenComum3'), { produtos: [ { idProduto: pm.collectionVariables.get('idProdA'), quantidade: 1 } ] }, (err, res) => {",
+                  "  pm.collectionVariables.set('statusPrimeiroCarrinhoCar04', String(res.code));",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Passo 1: primeiro carrinho cadastrado (201)', () => pm.expect(pm.collectionVariables.get('statusPrimeiroCarrinhoCar04')).to.eql('201'));",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Não é permitido ter mais de 1 carrinho', () => pm.expect(pm.response.json().message).to.eql(\"Não é permitido ter mais de 1 carrinho\"));",
+                  "call('GET', '/carrinhos?idUsuario=' + pm.collectionVariables.get('idComum3'), null, null, (err, res) => {",
+                  "  pm.test('Só existe 1 carrinho do usuário (quantidade 1)', () => pm.expect(res.json().quantidade).to.eql(1));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum3}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProdB}}\", \"quantidade\": 1 } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos"
+              ]
+            },
+            "description": "RN-12 · O pré-request cria o primeiro carrinho. Esperado: 400 e “Não é permitido ter mais de 1 carrinho”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-CAR-05 – Tentar cadastrar um carrinho com um produto que não existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Produto não encontrado', () => pm.expect(pm.response.json().message).to.eql(\"Produto não encontrado\"));",
+                  "call('GET', '/carrinhos?idUsuario=' + pm.collectionVariables.get('idComum4'), null, null, (err, res) => {",
+                  "  pm.test('Nenhum carrinho foi criado (quantidade 0)', () => pm.expect(res.json().quantidade).to.eql(0));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum4}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtos\": [ { \"idProduto\": \"naoExiste1234567\", \"quantidade\": 1 } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos"
+              ]
+            },
+            "description": "RN-12 · Esperado: 400 e “Produto não encontrado”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-CAR-06 – Tentar cadastrar um carrinho com quantidade maior que o estoque",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdB'), null, null, (err, res) => {",
+                  "  const x = res.json().quantidade;",
+                  "  pm.collectionVariables.set('estoqueAntesCar06', String(x));",
+                  "  pm.collectionVariables.set('qtdAcimaEstoque', String(x + 1));",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem: Produto não possui quantidade suficiente', () => pm.expect(pm.response.json().message).to.eql(\"Produto não possui quantidade suficiente\"));",
+                  "const x = Number(pm.collectionVariables.get('estoqueAntesCar06'));",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdB'), null, null, (err, res) => {",
+                  "  pm.test('O estoque não mudou', () => pm.expect(res.json().quantidade).to.eql(x));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum4}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProdB}}\", \"quantidade\": {{qtdAcimaEstoque}} } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos"
+              ]
+            },
+            "description": "RN-12, RN-13 · O pré-request lê o estoque X e pede X + 1. Esperado: 400 e “Produto não possui quantidade suficiente”."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-CAR-07 – Concluir a compra e excluir o carrinho",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.collectionVariables.set('statusCarrinhoCar07', '');",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdB'), null, null, (e1, r1) => {",
+                  "  pm.collectionVariables.set('estoqueAntesCar07', String(r1.json().quantidade));",
+                  "  call('POST', '/carrinhos', pm.collectionVariables.get('tokenComum5'), { produtos: [ { idProduto: pm.collectionVariables.get('idProdB'), quantidade: 1 } ] }, (e2, r2) => {",
+                  "    pm.collectionVariables.set('statusCarrinhoCar07', String(r2.code));",
+                  "    pm.collectionVariables.set('idCarrinhoCar07', r2.json()._id);",
+                  "  });",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.test('Passo 2: carrinho cadastrado (201)', () => pm.expect(pm.collectionVariables.get('statusCarrinhoCar07')).to.eql('201'));",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Registro excluído com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Registro excluído com sucesso\"));",
+                  "const x = Number(pm.collectionVariables.get('estoqueAntesCar07'));",
+                  "call('GET', '/carrinhos/' + pm.collectionVariables.get('idCarrinhoCar07'), null, null, (err, res) => {",
+                  "  pm.test('Carrinho não existe mais (400, “Carrinho não encontrado”)', () => {",
+                  "    pm.expect(res.code).to.eql(400);",
+                  "    pm.expect(res.json().message).to.eql('Carrinho não encontrado');",
+                  "  });",
+                  "});",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdB'), null, null, (err, res) => {",
+                  "  pm.test('Concluir a compra NÃO devolve o estoque (X menos 1)', () => pm.expect(res.json().quantidade).to.eql(x - 1));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum5}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos/concluir-compra",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos",
+                "concluir-compra"
+              ]
+            },
+            "description": "RN-13 · O pré-request cria o carrinho do Comum 5. Esperado: 200 e estoque não devolvido."
+          },
+          "response": []
+        },
+        {
+          "name": "CT-CAR-08 – Cancelar a compra e devolver os produtos ao estoque",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "pm.collectionVariables.set('statusCarrinhoCar08', '');",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdA'), null, null, (e1, r1) => {",
+                  "  pm.collectionVariables.set('estoqueAntesCar08', String(r1.json().quantidade));",
+                  "  call('POST', '/carrinhos', pm.collectionVariables.get('tokenComum6'), { produtos: [ { idProduto: pm.collectionVariables.get('idProdA'), quantidade: 2 } ] }, (e2, r2) => {",
+                  "    pm.collectionVariables.set('statusCarrinhoCar08', String(r2.code));",
+                  "    pm.collectionVariables.set('idCarrinhoCar08', r2.json()._id);",
+                  "    call('GET', '/produtos/' + pm.collectionVariables.get('idProdA'), null, null, (e3, r3) => {",
+                  "      pm.collectionVariables.set('estoqueMeioCar08', String(r3.json().quantidade));",
+                  "    });",
+                  "  });",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const BASE = pm.collectionVariables.get('baseUrl');",
+                  "const call = (method, path, token, body, cb) => {",
+                  "  const opt = { url: BASE + path, method: method, header: { 'Content-Type': 'application/json' } };",
+                  "  if (token) { opt.header['Authorization'] = token; }",
+                  "  if (body) { opt.body = { mode: 'raw', raw: JSON.stringify(body) }; }",
+                  "  pm.sendRequest(opt, cb);",
+                  "};",
+                  "const x = Number(pm.collectionVariables.get('estoqueAntesCar08'));",
+                  "pm.test('Passo 2: carrinho cadastrado (201)', () => pm.expect(pm.collectionVariables.get('statusCarrinhoCar08')).to.eql('201'));",
+                  "pm.test('Passo 3: com o carrinho, o estoque é X menos 2', () => pm.expect(Number(pm.collectionVariables.get('estoqueMeioCar08'))).to.eql(x - 2));",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Mensagem: Registro excluído com sucesso', () => pm.expect(pm.response.json().message).to.eql(\"Registro excluído com sucesso\"));",
+                  "call('GET', '/carrinhos/' + pm.collectionVariables.get('idCarrinhoCar08'), null, null, (err, res) => {",
+                  "  pm.test('Carrinho não existe mais (400, “Carrinho não encontrado”)', () => {",
+                  "    pm.expect(res.code).to.eql(400);",
+                  "    pm.expect(res.json().message).to.eql('Carrinho não encontrado');",
+                  "  });",
+                  "});",
+                  "call('GET', '/produtos/' + pm.collectionVariables.get('idProdA'), null, null, (err, res) => {",
+                  "  pm.test('O estoque foi devolvido (voltou a ser X)', () => pm.expect(res.json().quantidade).to.eql(x));",
+                  "});",
+                  "pm.test('Tempo de resposta abaixo de 3000 ms', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{tokenComum6}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/carrinhos/cancelar-compra",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrinhos",
+                "cancelar-compra"
+              ]
+            },
+            "description": "RN-13 · O pré-request cria o carrinho do Comum 6. Esperado: 200 e estoque devolvido."
+          },
+          "response": []
+        }
+      ],
+      "description": "8 casos: CT-CAR-01 a CT-CAR-08."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Renova os tokens sozinho se passaram mais de 8 minutos (cada token vale 10 minutos).",
+          "// Não roda nas requisições da pasta 00 - Preparação (nomes que começam com P01, P02...).",
+          "const nome = pm.info.requestName;",
+          "const ultimo = Number(pm.collectionVariables.get('tokenTime') || 0);",
+          "const preparacao = /^P\\d{2}/.test(nome);",
+          "if (!preparacao && ultimo > 0 && (Date.now() - ultimo) > 8 * 60 * 1000) {",
+          "  const pares = [['tokenAdmin', 'emailAdmin']];",
+          "  for (let i = 1; i <= 7; i++) { pares.push(['tokenComum' + i, 'emailComum' + i]); }",
+          "  pares.forEach((par) => {",
+          "    pm.sendRequest({",
+          "      url: pm.collectionVariables.get('baseUrl') + '/login',",
+          "      method: 'POST',",
+          "      header: { 'Content-Type': 'application/json' },",
+          "      body: { mode: 'raw', raw: JSON.stringify({ email: pm.collectionVariables.get(par[1]), password: pm.collectionVariables.get('senha') }) }",
+          "    }, (err, res) => {",
+          "      if (!err && res.code === 200) { pm.collectionVariables.set(par[0], res.json().authorization); }",
+          "    });",
+          "  });",
+          "  pm.collectionVariables.set('tokenTime', String(Date.now()));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://serverest.dev"
+    },
+    {
+      "key": "senha",
+      "value": "teste123"
+    },
+    {
+      "key": "bearer_token_14lb",
+      "secret": true
+    },
+    {
+      "key": "runId",
+      "value": ""
+    },
+    {
+      "key": "emailAdmin",
+      "value": ""
+    },
+    {
+      "key": "emailComum1",
+      "value": ""
+    },
+    {
+      "key": "emailComum2",
+      "value": ""
+    },
+    {
+      "key": "emailComum3",
+      "value": ""
+    },
+    {
+      "key": "emailComum4",
+      "value": ""
+    },
+    {
+      "key": "emailComum5",
+      "value": ""
+    },
+    {
+      "key": "emailComum6",
+      "value": ""
+    },
+    {
+      "key": "emailComum7",
+      "value": ""
+    },
+    {
+      "key": "nomeProdA",
+      "value": ""
+    },
+    {
+      "key": "nomeProdB",
+      "value": ""
+    },
+    {
+      "key": "nomeProdC",
+      "value": ""
+    },
+    {
+      "key": "tokenTime",
+      "value": ""
+    },
+    {
+      "key": "idAdmin",
+      "value": ""
+    },
+    {
+      "key": "idComum1",
+      "value": ""
+    },
+    {
+      "key": "idComum2",
+      "value": ""
+    },
+    {
+      "key": "idComum3",
+      "value": ""
+    },
+    {
+      "key": "idComum4",
+      "value": ""
+    },
+    {
+      "key": "idComum5",
+      "value": ""
+    },
+    {
+      "key": "idComum6",
+      "value": ""
+    },
+    {
+      "key": "idComum7",
+      "value": ""
+    },
+    {
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "tokenComum1",
+      "value": ""
+    },
+    {
+      "key": "tokenComum2",
+      "value": ""
+    },
+    {
+      "key": "tokenComum3",
+      "value": ""
+    },
+    {
+      "key": "tokenComum4",
+      "value": ""
+    },
+    {
+      "key": "tokenComum5",
+      "value": ""
+    },
+    {
+      "key": "tokenComum6",
+      "value": ""
+    },
+    {
+      "key": "tokenComum7",
+      "value": ""
+    },
+    {
+      "key": "idProdA",
+      "value": ""
+    },
+    {
+      "key": "idProdB",
+      "value": ""
+    },
+    {
+      "key": "idProdC",
+      "value": ""
+    },
+    {
+      "key": "idCarrinhoComum7",
+      "value": ""
+    },
+    {
+      "key": "emailNovo",
+      "value": ""
+    },
+    {
+      "key": "statusCadastroDescartavel",
+      "value": ""
+    },
+    {
+      "key": "idUsuarioDescartavel",
+      "value": ""
+    }
+  ]
+}
